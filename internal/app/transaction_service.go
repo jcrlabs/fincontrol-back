@@ -39,7 +39,7 @@ func (s *TransactionService) Create(ctx context.Context, input CreateTransaction
 		return domain.JournalEntry{}, err
 	}
 
-	s.audit.Log(ctx, domain.AuditEntry{ //nolint:errcheck
+	_ = s.audit.Log(ctx, domain.AuditEntry{
 		UserID:     input.UserID,
 		Action:     "create_transaction",
 		EntityType: "journal_entry",
@@ -55,7 +55,7 @@ func (s *TransactionService) Void(ctx context.Context, id, userID uuid.UUID) (do
 		return domain.JournalEntry{}, err
 	}
 
-	s.audit.Log(ctx, domain.AuditEntry{ //nolint:errcheck
+	_ = s.audit.Log(ctx, domain.AuditEntry{
 		UserID:     userID,
 		Action:     "void_transaction",
 		EntityType: "journal_entry",

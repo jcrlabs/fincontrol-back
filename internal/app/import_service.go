@@ -89,7 +89,7 @@ func (s *ImportService) Confirm(ctx context.Context, input ConfirmInput) (domain
 			result.Errors = append(result.Errors, fmt.Sprintf("record dedup for %s: %v", row.Description, err))
 		}
 
-		s.audit.Log(ctx, domain.AuditEntry{ //nolint:gosec
+		_ = s.audit.Log(ctx, domain.AuditEntry{
 			UserID:     input.UserID,
 			Action:     "import_transaction",
 			EntityType: "journal_entry",
