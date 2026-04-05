@@ -31,14 +31,14 @@ spec:
                 name: {{ .Values.secretName }}
           livenessProbe:
             httpGet:
-              path: /livez
+              path: /api/health
               port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
+              path: /api/health
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
