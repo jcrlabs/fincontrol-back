@@ -135,7 +135,7 @@ func (s *ScheduledService) processSingle(ctx context.Context, st domain.Schedule
 		return fmt.Errorf("advance next_run: %w", err)
 	}
 
-	s.audit.Log(ctx, domain.AuditEntry{ //nolint:errcheck
+	s.audit.Log(ctx, domain.AuditEntry{ //nolint:gosec
 		UserID:     st.UserID,
 		Action:     "process_scheduled",
 		EntityType: "scheduled_transaction",

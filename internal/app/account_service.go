@@ -54,7 +54,7 @@ func (s *AccountService) Create(ctx context.Context, input CreateAccountInput) (
 		return domain.Account{}, err
 	}
 
-	s.audit.Log(ctx, domain.AuditEntry{ //nolint:errcheck
+	s.audit.Log(ctx, domain.AuditEntry{ //nolint:gosec
 		UserID:     input.UserID,
 		Action:     "create_account",
 		EntityType: "account",

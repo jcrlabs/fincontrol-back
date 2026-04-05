@@ -62,7 +62,7 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool, migrationsDir string
 			continue
 		}
 
-		sql, err := os.ReadFile(filepath.Join(migrationsDir, filename))
+		sql, err := os.ReadFile(filepath.Join(migrationsDir, filename)) //nolint:gosec
 		if err != nil {
 			return fmt.Errorf("read migration %s: %w", filename, err)
 		}
