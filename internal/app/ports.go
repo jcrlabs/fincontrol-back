@@ -99,12 +99,20 @@ type JournalFilters struct {
 
 // Report types
 
-type ProfitAndLoss struct {
-	From     time.Time
-	To       time.Time
+type PnLPeriod struct {
+	Month    time.Time
 	Income   decimal.Decimal
 	Expenses decimal.Decimal
 	Net      decimal.Decimal
+}
+
+type ProfitAndLoss struct {
+	From          time.Time
+	To            time.Time
+	Periods       []PnLPeriod
+	TotalIncome   decimal.Decimal
+	TotalExpenses decimal.Decimal
+	TotalNet      decimal.Decimal
 }
 
 type BalanceSheet struct {

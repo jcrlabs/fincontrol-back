@@ -21,29 +21,48 @@ func NewReportRepo(pool *pgxpool.Pool) *ReportRepo {
 }
 
 func (r *ReportRepo) GetProfitAndLoss(ctx context.Context, userID uuid.UUID, from, to time.Time) (app.ProfitAndLoss, error) {
-	var income, expenses decimal.Decimal
-
-	err := r.pool.QueryRow(ctx, `
+	rows, err := r.pool.Query(ctx, `
 		SELECT
-			COALESCE(SUM(e.amount) FILTER (WHERE a.type = 'income' AND e.amount < 0), 0) * -1 AS income,
-			COALESCE(SUM(e.amount) FILTER (WHERE a.type = 'expense' AND e.amount > 0), 0)      AS expenses
+			date_trunc('month', je.date)                                                          AS month,
+			COALESCE(SUM(e.amount) FILTER (WHERE a.type = 'income' AND e.amount < 0), 0) * -1   AS income,
+			COALESCE(SUM(e.amount) FILTER (WHERE a.type = 'expense' AND e.amount > 0), 0)        AS expenses
 		FROM entries e
 		JOIN accounts a ON e.account_id = a.id
 		JOIN journal_entries je ON e.journal_entry_id = je.id
 		WHERE a.user_id = $1
 		  AND je.date >= $2 AND je.date <= $3
 		  AND a.type IN ('income', 'expense')
-	`, userID, from, to).Scan(&income, &expenses)
+		GROUP BY month
+		ORDER BY month
+	`, userID, from, to)
 	if err != nil {
 		return app.ProfitAndLoss{}, fmt.Errorf("get p&l: %w", err)
 	}
+	defer rows.Close()
+
+	var periods []app.PnLPeriod
+	var totalIncome, totalExpenses decimal.Decimal
+	for rows.Next() {
+		var p app.PnLPeriod
+		if err := rows.Scan(&p.Month, &p.Income, &p.Expenses); err != nil {
+			return app.ProfitAndLoss{}, fmt.Errorf("scan p&l row: %w", err)
+		}
+		p.Net = p.Income.Sub(p.Expenses)
+		totalIncome = totalIncome.Add(p.Income)
+		totalExpenses = totalExpenses.Add(p.Expenses)
+		periods = append(periods, p)
+	}
+	if err := rows.Err(); err != nil {
+		return app.ProfitAndLoss{}, fmt.Errorf("p&l rows: %w", err)
+	}
 
 	return app.ProfitAndLoss{
-		From:     from,
-		To:       to,
-		Income:   income,
-		Expenses: expenses,
-		Net:      income.Sub(expenses),
+		From:          from,
+		To:            to,
+		Periods:       periods,
+		TotalIncome:   totalIncome,
+		TotalExpenses: totalExpenses,
+		TotalNet:      totalIncome.Sub(totalExpenses),
 	}, nil
 }
 

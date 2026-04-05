@@ -60,12 +60,23 @@ func (h *ReportHandler) ProfitAndLoss(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	periods := make([]map[string]any, len(pnl.Periods))
+	for i, p := range pnl.Periods {
+		periods[i] = map[string]any{
+			"month":    p.Month.Format("2006-01"),
+			"income":   p.Income.InexactFloat64(),
+			"expenses": p.Expenses.InexactFloat64(),
+			"net":      p.Net.InexactFloat64(),
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
-		"from":     pnl.From.Format("2006-01-02"),
-		"to":       pnl.To.Format("2006-01-02"),
-		"income":   pnl.Income.String(),
-		"expenses": pnl.Expenses.String(),
-		"net":      pnl.Net.String(),
+		"from":           pnl.From.Format("2006-01-02"),
+		"to":             pnl.To.Format("2006-01-02"),
+		"periods":        periods,
+		"total_income":   pnl.TotalIncome.InexactFloat64(),
+		"total_expenses": pnl.TotalExpenses.InexactFloat64(),
+		"total_net":      pnl.TotalNet.InexactFloat64(),
 	})
 }
 
