@@ -8,10 +8,13 @@ linters:
     - unused
     - gosimple
     - ineffassign
-    - gofmt
     - gosec
     - noctx
   settings:
     gosec:
       excludes:
         - G115
+
+formatters:
+  enable:
+    - gofmt
