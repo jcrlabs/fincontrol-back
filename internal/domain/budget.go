@@ -9,12 +9,12 @@ import (
 
 // Budget tracks spending limits per category per month.
 type Budget struct {
-	ID                 uuid.UUID
-	UserID             uuid.UUID
-	CategoryID         uuid.UUID
-	Month              time.Time       // first day of the month
-	Amount             decimal.Decimal
-	AlertThresholdPct  int             // default 80
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	CategoryID        uuid.UUID
+	Month             time.Time // first day of the month
+	Amount            decimal.Decimal
+	AlertThresholdPct int // default 80
 }
 
 // BudgetProgress is a calculated view of a budget with current spending.

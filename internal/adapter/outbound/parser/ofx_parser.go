@@ -21,12 +21,12 @@ func (p *OFXParser) Parse(r io.Reader) ([]domain.ImportRow, error) {
 	var rows []domain.ImportRow
 
 	var (
-		inTx        bool
-		dtPosted    string
-		trnAmt      string
-		memo        string
-		name        string
-		curDef      = "EUR"
+		inTx     bool
+		dtPosted string
+		trnAmt   string
+		memo     string
+		name     string
+		curDef   = "EUR"
 	)
 
 	for scanner.Scan() {

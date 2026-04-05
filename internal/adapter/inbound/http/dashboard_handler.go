@@ -27,9 +27,9 @@ type dashboardLedgerRepo interface {
 
 // DashboardHandler handles GET /api/v1/dashboard.
 type DashboardHandler struct {
-	report  reportRepository
-	budgets dashboardBudgetRepo
-	ledger  dashboardLedgerRepo
+	report   reportRepository
+	budgets  dashboardBudgetRepo
+	ledger   dashboardLedgerRepo
 	accounts dashboardAccountRepo
 }
 

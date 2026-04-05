@@ -11,15 +11,15 @@ import (
 // INVARIANT: sum(entries.amount) == 0 ALWAYS.
 // RULE: journal entries are NEVER deleted or updated. Void with a reverse entry.
 type JournalEntry struct {
-	ID               uuid.UUID
-	UserID           uuid.UUID
-	Description      string
-	Date             time.Time
-	CategoryID       *uuid.UUID
-	IsReversal       bool
-	ReversedEntryID  *uuid.UUID
-	Entries          []Entry
-	CreatedAt        time.Time
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	Description     string
+	Date            time.Time
+	CategoryID      *uuid.UUID
+	IsReversal      bool
+	ReversedEntryID *uuid.UUID
+	Entries         []Entry
+	CreatedAt       time.Time
 }
 
 // Validate checks the double-entry invariant.

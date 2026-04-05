@@ -17,13 +17,13 @@ type ImportRow struct {
 
 // ColumnMapping maps CSV column indices to ImportRow fields.
 type ColumnMapping struct {
-	DateCol        int    `json:"date_col"`
-	DateFormat     string `json:"date_format"`      // e.g. "2006-01-02", "02/01/2006"
-	DescriptionCol int    `json:"description_col"`
-	AmountCol      int    `json:"amount_col"`
-	CurrencyCol    int    `json:"currency_col"`     // -1 = not present, use default
+	DateCol         int    `json:"date_col"`
+	DateFormat      string `json:"date_format"` // e.g. "2006-01-02", "02/01/2006"
+	DescriptionCol  int    `json:"description_col"`
+	AmountCol       int    `json:"amount_col"`
+	CurrencyCol     int    `json:"currency_col"`     // -1 = not present, use default
 	DefaultCurrency string `json:"default_currency"` // e.g. "EUR"
-	SkipRows       int    `json:"skip_rows"`        // header rows to skip
+	SkipRows        int    `json:"skip_rows"`        // header rows to skip
 }
 
 // ImportPreview is returned by the preview endpoint.

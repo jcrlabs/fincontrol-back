@@ -17,14 +17,14 @@ const (
 
 // ScheduledTransaction is a recurring transaction template evaluated by the scheduler.
 type ScheduledTransaction struct {
-	ID                  uuid.UUID
-	UserID              uuid.UUID
-	Description         string
-	Frequency           Frequency
-	NextRun             time.Time
-	IsActive            bool
-	TemplateEntries     []ScheduledEntry
-	CreatedAt           time.Time
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	Description     string
+	Frequency       Frequency
+	NextRun         time.Time
+	IsActive        bool
+	TemplateEntries []ScheduledEntry
+	CreatedAt       time.Time
 }
 
 // ScheduledEntry is a template entry for a scheduled transaction.

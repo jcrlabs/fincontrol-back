@@ -16,7 +16,7 @@ type authService interface {
 
 // AuthHandler handles /api/v1/auth/* routes.
 type AuthHandler struct {
-	svc            authService
+	svc             authService
 	refreshTokenTTL time.Duration
 }
 

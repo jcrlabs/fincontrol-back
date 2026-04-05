@@ -23,9 +23,9 @@ type ImportDedupRepository interface {
 
 // ImportService handles CSV/OFX file import with dedup.
 type ImportService struct {
-	dedup          ImportDedupRepository
-	ledger         LedgerRepository
-	audit          AuditRepository
+	dedup  ImportDedupRepository
+	ledger LedgerRepository
+	audit  AuditRepository
 }
 
 func NewImportService(dedup ImportDedupRepository, ledger LedgerRepository, audit AuditRepository) *ImportService {

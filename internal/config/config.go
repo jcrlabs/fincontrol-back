@@ -15,9 +15,9 @@ import (
 type Config struct {
 	DatabaseURL string
 
-	JWTPrivateKey  *rsa.PrivateKey
-	JWTPublicKey   *rsa.PublicKey
-	AccessTokenTTL time.Duration // 15 min
+	JWTPrivateKey   *rsa.PrivateKey
+	JWTPublicKey    *rsa.PublicKey
+	AccessTokenTTL  time.Duration // 15 min
 	RefreshTokenTTL time.Duration // 7 days
 
 	Port string
