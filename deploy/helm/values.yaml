@@ -40,3 +40,14 @@ config:
   corsOrigin: https://fincontrol.jcrlabs.net
 
 secretName: fincontrol-back-secrets
+
+postgres:
+  image: postgres:17-alpine
+  storage: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

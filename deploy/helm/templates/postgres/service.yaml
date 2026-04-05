@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-fincontrol
+  labels:
+    {{- include "fincontrol-back.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  selector:
+    app: postgres-fincontrol
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
