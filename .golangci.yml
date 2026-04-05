@@ -11,15 +11,15 @@ linters:
     - gofmt
     - gosec
     - noctx
-
-linters-settings:
-  gosec:
-    excludes:
-      - G115  # integer overflow on conversion (false positives with pagination)
+  settings:
+    gosec:
+      excludes:
+        - G115
 
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - gosec
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
