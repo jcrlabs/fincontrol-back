@@ -27,6 +27,10 @@ go.work.sum
 # env file
 .env
 
+# JWT keys (never commit private keys)
+.keys/
+bin/
+
 # Editor/IDE
 # .idea/
 # .vscode/
