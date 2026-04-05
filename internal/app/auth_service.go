@@ -13,10 +13,13 @@ import (
 
 const bcryptCost = 12
 
-// TokenPair holds an access token and a refresh token.
+// TokenPair holds tokens and the authenticated user info.
 type TokenPair struct {
 	AccessToken  string
 	RefreshToken string
+	UserID       string
+	Email        string
+	Name         string
 }
 
 // AuthService handles registration, login, and token refresh.
@@ -64,7 +67,14 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (TokenP
 		return TokenPair{}, err
 	}
 
-	return s.issueTokens(created.ID)
+	pair, err := s.issueTokens(created.ID)
+	if err != nil {
+		return TokenPair{}, err
+	}
+	pair.UserID = created.ID.String()
+	pair.Email = created.Email
+	pair.Name = created.Name
+	return pair, nil
 }
 
 type LoginInput struct {
@@ -82,7 +92,14 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (TokenPair, e
 		return TokenPair{}, domain.ErrUnauthorized
 	}
 
-	return s.issueTokens(user.ID)
+	pair, err := s.issueTokens(user.ID)
+	if err != nil {
+		return TokenPair{}, err
+	}
+	pair.UserID = user.ID.String()
+	pair.Email = user.Email
+	pair.Name = user.Name
+	return pair, nil
 }
 
 func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (TokenPair, error) {

@@ -56,7 +56,10 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.setRefreshCookie(w, pair.RefreshToken)
-	writeJSON(w, http.StatusCreated, map[string]string{"access_token": pair.AccessToken})
+	writeJSON(w, http.StatusCreated, map[string]any{
+		"access_token": pair.AccessToken,
+		"user":         map[string]string{"id": pair.UserID, "email": pair.Email, "name": pair.Name},
+	})
 }
 
 type loginRequest struct {
@@ -81,7 +84,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.setRefreshCookie(w, pair.RefreshToken)
-	writeJSON(w, http.StatusOK, map[string]string{"access_token": pair.AccessToken})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"access_token": pair.AccessToken,
+		"user":         map[string]string{"id": pair.UserID, "email": pair.Email, "name": pair.Name},
+	})
 }
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
