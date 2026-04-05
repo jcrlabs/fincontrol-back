@@ -15,11 +15,3 @@ linters:
     gosec:
       excludes:
         - G115
-
-issues:
-  exclusions:
-    rules:
-      - path: _test\.go
-        linters:
-          - errcheck
-          - gosec
