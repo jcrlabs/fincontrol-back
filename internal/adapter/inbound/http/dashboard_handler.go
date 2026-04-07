@@ -118,9 +118,9 @@ func (h *DashboardHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"period":              map[string]string{"from": monthStart.Format("2006-01-02"), "to": now.Format("2006-01-02")},
-		"income":              pnl.Income.String(),
-		"expenses":            pnl.Expenses.String(),
-		"net":                 pnl.Net.String(),
+		"income":              pnl.TotalIncome.InexactFloat64(),
+		"expenses":            pnl.TotalExpenses.InexactFloat64(),
+		"net":                 pnl.TotalNet.InexactFloat64(),
 		"budget_alerts":       alerts,
 		"recent_transactions": recentTxs,
 		"accounts":            accountList,
