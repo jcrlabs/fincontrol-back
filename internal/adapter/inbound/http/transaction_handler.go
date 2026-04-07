@@ -127,7 +127,7 @@ func (h *TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	for i, j := range journals {
 		resp[i] = toJournalResponse(j)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"data": resp, "total": total})
+	writeJSON(w, http.StatusOK, map[string]any{"items": resp, "total": total})
 }
 
 type entryInput struct {
