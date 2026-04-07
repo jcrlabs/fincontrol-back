@@ -122,6 +122,7 @@ func (p *CSVParser) SuggestMapping(r io.Reader) (domain.ColumnMapping, []domain.
 	reader.Comma = sep
 	reader.LazyQuotes = true
 	reader.TrimLeadingSpace = true
+	reader.FieldsPerRecord = -1 // allow variable number of fields (metadata rows differ from data rows)
 
 	all, err := reader.ReadAll()
 	if err != nil {
@@ -304,18 +305,26 @@ func detectSeparator(data []byte) (rune, string) {
 	return best, string(best)
 }
 
-// findHeaderRow returns the index of the first row that looks like a header
-// (contains keyword-like strings, not dates or numbers).
+// findHeaderRow returns the index of the first row that looks like a CSV header.
+// A real header row has multiple cells that ARE keywords (not "Key: value" metadata).
 func findHeaderRow(rows [][]string) int {
 	for i, row := range rows {
+		matches := 0
 		for _, cell := range row {
 			lower := strings.ToLower(strings.TrimSpace(cell))
+			// Skip metadata cells — they usually contain ":" separating key from value.
+			if strings.Contains(lower, ":") {
+				continue
+			}
 			if isDateHeader(lower) || isDescriptionHeader(lower) || isAmountHeader(lower) ||
 				isDebitHeader(lower) || isCreditHeader(lower) {
-				return i
+				matches++
 			}
 		}
-		// Stop searching after 10 rows.
+		// Require at least 2 header-like cells (real headers have date + description + amount).
+		if matches >= 2 {
+			return i
+		}
 		if i >= 9 {
 			break
 		}
