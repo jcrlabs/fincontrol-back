@@ -19,7 +19,10 @@ func assertRows(t *testing.T, name string, rows []domain.ImportRow, want int) {
 
 func assertAmount(t *testing.T, name string, rows []domain.ImportRow, idx int, want string) {
 	t.Helper()
-	if idx >= len(rows) { t.Errorf("%s: row %d out of range (%d rows)", name, idx, len(rows)); return }
+	if idx >= len(rows) {
+		t.Errorf("%s: row %d out of range (%d rows)", name, idx, len(rows))
+		return
+	}
 	if !rows[idx].Amount.Equal(dec(want)) {
 		t.Errorf("%s row[%d]: got %s, want %s", name, idx, rows[idx].Amount, want)
 	}
@@ -43,7 +46,9 @@ var bomFormat = "\xEF\xBB\xBFFecha;Concepto;Importe;Saldo\n01/03/2026;PAGO;100,0
 
 func TestAbanca_Simple(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaSimple))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "simple", rows, 3)
 	assertAmount(t, "simple", rows, 0, "1500")
 	assertAmount(t, "simple", rows, 1, "-45.80")
@@ -51,27 +56,37 @@ func TestAbanca_Simple(t *testing.T) {
 
 func TestAbanca_TwoDateCols(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaTwoDateCols))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "two-date-cols", rows, 2)
 	assertAmount(t, "two-date-cols", rows, 1, "-45.80")
 }
 
 func TestAbanca_MetadataRows(t *testing.T) {
 	m, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaWithMetadata))
-	if err != nil { t.Fatal(err) }
-	if m.SkipRows < 5 { t.Errorf("SkipRows=%d, want >=5", m.SkipRows) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.SkipRows < 5 {
+		t.Errorf("SkipRows=%d, want >=5", m.SkipRows)
+	}
 	assertRows(t, "metadata", rows, 2)
 }
 
 func TestAbanca_MetadataWithFecha(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaMetadataFecha))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "metadata-fecha", rows, 2)
 }
 
 func TestAbanca_QuotedFields(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaQuoted))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "quoted", rows, 2)
 	assertAmount(t, "quoted", rows, 0, "1500")
 	assertAmount(t, "quoted", rows, 1, "-45.80")
@@ -79,14 +94,18 @@ func TestAbanca_QuotedFields(t *testing.T) {
 
 func TestAbanca_UnicodeMinus(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaUnicodeMinus))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "unicode-minus", rows, 2)
 	assertAmount(t, "unicode-minus", rows, 1, "-120.50")
 }
 
 func TestAbanca_Thousands(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaThousands))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "thousands", rows, 2)
 	assertAmount(t, "thousands", rows, 0, "150000")
 	assertAmount(t, "thousands", rows, 1, "-1250.75")
@@ -94,7 +113,9 @@ func TestAbanca_Thousands(t *testing.T) {
 
 func TestAbanca_PositiveSign(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaPositiveSign))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "positive-sign", rows, 2)
 	assertAmount(t, "positive-sign", rows, 0, "2500")
 	assertAmount(t, "positive-sign", rows, 1, "-85.30")
@@ -102,21 +123,31 @@ func TestAbanca_PositiveSign(t *testing.T) {
 
 func TestAbanca_EarlyMonth(t *testing.T) {
 	m, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaEarlyMonth))
-	if err != nil { t.Fatal(err) }
-	if m.DateFormat != "02/01/2006" { t.Errorf("dateFormat=%q, want 02/01/2006", m.DateFormat) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.DateFormat != "02/01/2006" {
+		t.Errorf("dateFormat=%q, want 02/01/2006", m.DateFormat)
+	}
 	assertRows(t, "early-month", rows, 3)
 }
 
 func TestAbanca_EmptyRows(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(abancaEmptyRows))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "empty-rows", rows, 2)
 }
 
 func TestING_SplitCols(t *testing.T) {
 	m, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(ingSplitCols))
-	if err != nil { t.Fatal(err) }
-	if m.DebitCol < 0 || m.CreditCol < 0 { t.Fatalf("debit/credit not detected: d=%d c=%d", m.DebitCol, m.CreditCol) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.DebitCol < 0 || m.CreditCol < 0 {
+		t.Fatalf("debit/credit not detected: d=%d c=%d", m.DebitCol, m.CreditCol)
+	}
 	assertRows(t, "ing-split", rows, 3)
 	assertAmount(t, "ing-split", rows, 0, "49.99")
 	assertAmount(t, "ing-split", rows, 1, "2500")
@@ -125,21 +156,31 @@ func TestING_SplitCols(t *testing.T) {
 
 func TestISO_Format(t *testing.T) {
 	m, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(isoFormat))
-	if err != nil { t.Fatal(err) }
-	if m.DateFormat != "2006-01-02" { t.Errorf("dateFormat=%q, want 2006-01-02", m.DateFormat) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.DateFormat != "2006-01-02" {
+		t.Errorf("dateFormat=%q, want 2006-01-02", m.DateFormat)
+	}
 	assertRows(t, "iso", rows, 2)
 }
 
 func TestBOM_Format(t *testing.T) {
 	_, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(bomFormat))
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	assertRows(t, "bom", rows, 1)
 }
 
 func TestTab_Separated(t *testing.T) {
 	m, rows, err := NewCSVParser().SuggestMapping(strings.NewReader(tabSeparated))
-	if err != nil { t.Fatal(err) }
-	if m.Separator != "\t" { t.Errorf("separator=%q, want tab", m.Separator) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.Separator != "\t" {
+		t.Errorf("separator=%q, want tab", m.Separator)
+	}
 	assertRows(t, "tab", rows, 1)
 }
 
@@ -164,6 +205,8 @@ func TestDetectSeparator(t *testing.T) {
 	}
 	for _, c := range cases {
 		_, got := detectSeparator([]byte(c.line))
-		if got != c.want { t.Errorf("sep(%q)=%q, want %q", c.line, got, c.want) }
+		if got != c.want {
+			t.Errorf("sep(%q)=%q, want %q", c.line, got, c.want)
+		}
 	}
 }

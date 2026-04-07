@@ -18,7 +18,7 @@ type ImportRow struct {
 // ColumnMapping maps CSV column indices to ImportRow fields.
 type ColumnMapping struct {
 	DateCol         int    `json:"date_col"`
-	DateFormat      string `json:"date_format"`      // e.g. "2006-01-02", "02/01/2006"
+	DateFormat      string `json:"date_format"` // e.g. "2006-01-02", "02/01/2006"
 	DescriptionCol  int    `json:"description_col"`
 	AmountCol       int    `json:"amount_col"`       // -1 if using DebitCol/CreditCol
 	DebitCol        int    `json:"debit_col"`        // -1 if not present (use AmountCol)
