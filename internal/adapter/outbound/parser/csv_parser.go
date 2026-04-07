@@ -253,6 +253,9 @@ func parseEuropeanDecimalStrict(s string) (decimal.Decimal, error) {
 	if s == "" {
 		return decimal.Zero, fmt.Errorf("empty amount")
 	}
+	// Normalize Unicode minus (U+2212) and non-breaking hyphen (U+2011) to ASCII hyphen.
+	s = strings.ReplaceAll(s, "\u2212", "-")
+	s = strings.ReplaceAll(s, "\u2011", "-")
 
 	// Detect format based on separators present.
 	hasDot := strings.Contains(s, ".")
