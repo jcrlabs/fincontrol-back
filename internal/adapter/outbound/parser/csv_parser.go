@@ -407,10 +407,7 @@ func ensureUTF8(data []byte) []byte {
 		}
 	}
 	// UTF-8 BOM: EF BB BF
-	bom := []byte{0xEF, 0xBB, 0xBF}
-	if bytes.HasPrefix(data, bom) {
-		data = data[len(bom):]
-	}
+	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
 	// If valid UTF-8, return as-is.
 	if utf8.Valid(data) {
 		return data
