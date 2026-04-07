@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  tag: v0.1.4
+  tag: v0.1.5
 
 ingress:
   host: fincontrol-api.jcrlabs.net
