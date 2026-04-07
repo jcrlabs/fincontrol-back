@@ -12,6 +12,9 @@ import (
 
 	"github.com/jonathanCaamano/fincontrol-back/internal/domain"
 	"github.com/shopspring/decimal"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/encoding/unicode"
+	"golang.org/x/text/transform"
 )
 
 // CSVParser implements app.ImportParser for CSV files.
@@ -372,13 +375,45 @@ func detectDateFormat(sample string, rows [][]string, dateCol int) string {
 	return matching[0]
 }
 
-// stripBOM removes a UTF-8 BOM if present.
-func stripBOM(data []byte) []byte {
+// ensureUTF8 detects the encoding from BOM or byte patterns and converts to UTF-8.
+// Handles UTF-8 BOM, UTF-16 LE/BE, and ISO-8859-1/Windows-1252.
+func ensureUTF8(data []byte) []byte {
+	// UTF-16 LE BOM: FF FE
+	if len(data) >= 2 && data[0] == 0xFF && data[1] == 0xFE {
+		enc := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
+		decoded, _, err := transform.Bytes(enc.NewDecoder(), data)
+		if err == nil {
+			return decoded
+		}
+	}
+	// UTF-16 BE BOM: FE FF
+	if len(data) >= 2 && data[0] == 0xFE && data[1] == 0xFF {
+		enc := unicode.UTF16(unicode.BigEndian, unicode.UseBOM)
+		decoded, _, err := transform.Bytes(enc.NewDecoder(), data)
+		if err == nil {
+			return decoded
+		}
+	}
+	// UTF-8 BOM: EF BB BF
 	bom := []byte{0xEF, 0xBB, 0xBF}
 	if bytes.HasPrefix(data, bom) {
-		return data[len(bom):]
+		data = data[len(bom):]
+	}
+	// If valid UTF-8, return as-is.
+	if utf8.Valid(data) {
+		return data
+	}
+	// Assume ISO-8859-1 / Windows-1252.
+	decoded, _, err := transform.Bytes(charmap.ISO8859_1.NewDecoder(), data)
+	if err == nil {
+		return decoded
 	}
 	return data
+}
+
+// stripBOM removes a UTF-8 BOM if present (kept for compatibility).
+func stripBOM(data []byte) []byte {
+	return ensureUTF8(data)
 }
 
 func runeFromSeparator(s string) rune {
