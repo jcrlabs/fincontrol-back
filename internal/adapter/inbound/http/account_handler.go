@@ -191,6 +191,12 @@ func (h *AccountHandler) ListEntries(w http.ResponseWriter, r *http.Request) {
 
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	pageSize, _ := strconv.Atoi(r.URL.Query().Get("page_size"))
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
 
 	entries, total, err := h.ledger.ListEntriesByAccount(r.Context(), accountID, userID, page, pageSize)
 	if err != nil {
@@ -220,7 +226,9 @@ func (h *AccountHandler) ListEntries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"data":  resp,
-		"total": total,
+		"items":    resp,
+		"total":    total,
+		"page":     page,
+		"per_page": pageSize,
 	})
 }
