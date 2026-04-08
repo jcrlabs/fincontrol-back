@@ -57,7 +57,7 @@ type ConfirmInput struct {
 
 // Confirm creates journal entries for the given rows, skipping duplicates.
 func (s *ImportService) Confirm(ctx context.Context, input ConfirmInput) (domain.ImportResult, error) {
-	result := domain.ImportResult{}
+	result := domain.ImportResult{Errors: []string{}}
 
 	// Resolve counterpart account — default to "Sin categorizar" if not provided.
 	creditID := uuid.Nil
