@@ -147,11 +147,13 @@ func (p *CSVParser) SuggestMapping(r io.Reader) (domain.ColumnMapping, []domain.
 	}
 
 	header := all[headerIdx]
+	dateColSet := false
 	for i, h := range header {
 		lower := strings.ToLower(strings.TrimSpace(h))
 		switch {
-		case isDateHeader(lower):
+		case isDateHeader(lower) && !dateColSet:
 			mapping.DateCol = i
+			dateColSet = true
 		case isDescriptionHeader(lower):
 			if mapping.DescriptionCol == 0 && i != 0 {
 				mapping.DescriptionCol = i
@@ -257,6 +259,12 @@ func parseEuropeanDecimalStrict(s string) (decimal.Decimal, error) {
 	// Normalize Unicode minus (U+2212) and non-breaking hyphen (U+2011) to ASCII hyphen.
 	s = strings.ReplaceAll(s, "\u2212", "-")
 	s = strings.ReplaceAll(s, "\u2011", "-")
+	// Strip currency symbols and surrounding whitespace (e.g. "-3.3 €", "$ 1,200.00").
+	s = strings.TrimSpace(s)
+	for _, sym := range []string{"€", "$", "£", "¥", "CHF", "USD", "EUR", "GBP"} {
+		s = strings.ReplaceAll(s, sym, "")
+	}
+	s = strings.TrimSpace(s)
 
 	// Detect format based on separators present.
 	hasDot := strings.Contains(s, ".")
