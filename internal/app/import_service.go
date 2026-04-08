@@ -23,13 +23,14 @@ type ImportDedupRepository interface {
 
 // ImportService handles CSV/OFX file import with dedup.
 type ImportService struct {
-	dedup  ImportDedupRepository
-	ledger LedgerRepository
-	audit  AuditRepository
+	dedup    ImportDedupRepository
+	ledger   LedgerRepository
+	audit    AuditRepository
+	accounts AccountRepository
 }
 
-func NewImportService(dedup ImportDedupRepository, ledger LedgerRepository, audit AuditRepository) *ImportService {
-	return &ImportService{dedup: dedup, ledger: ledger, audit: audit}
+func NewImportService(dedup ImportDedupRepository, ledger LedgerRepository, audit AuditRepository, accounts AccountRepository) *ImportService {
+	return &ImportService{dedup: dedup, ledger: ledger, audit: audit, accounts: accounts}
 }
 
 // Preview parses the file and returns rows + suggested mapping without importing.
@@ -49,14 +50,26 @@ func Preview(parser ImportParser, r io.Reader) (domain.ImportPreview, error) {
 type ConfirmInput struct {
 	UserID          uuid.UUID
 	Rows            []domain.ImportRow
-	DebitAccountID  uuid.UUID // account to debit (expense account)
-	CreditAccountID uuid.UUID // account to credit (payment account)
+	DebitAccountID  uuid.UUID  // primary account (e.g. bank/checking)
+	CreditAccountID *uuid.UUID // counterpart; nil → auto-use "Sin categorizar"
 	CategoryID      *uuid.UUID
 }
 
 // Confirm creates journal entries for the given rows, skipping duplicates.
 func (s *ImportService) Confirm(ctx context.Context, input ConfirmInput) (domain.ImportResult, error) {
 	result := domain.ImportResult{}
+
+	// Resolve counterpart account — default to "Sin categorizar" if not provided.
+	creditID := uuid.Nil
+	if input.CreditAccountID != nil {
+		creditID = *input.CreditAccountID
+	} else {
+		uncategorized, err := s.accounts.GetOrCreateUncategorized(ctx, input.UserID, "EUR")
+		if err != nil {
+			return result, fmt.Errorf("resolve counterpart account: %w", err)
+		}
+		creditID = uncategorized.ID
+	}
 
 	for _, row := range input.Rows {
 		isDup, err := s.dedup.IsDuplicate(ctx, input.UserID, row.Hash)
@@ -76,7 +89,7 @@ func (s *ImportService) Confirm(ctx context.Context, input ConfirmInput) (domain
 			CategoryID:  input.CategoryID,
 			Entries: []EntryInput{
 				{AccountID: input.DebitAccountID, Amount: row.Amount, Currency: row.Currency},
-				{AccountID: input.CreditAccountID, Amount: row.Amount.Neg(), Currency: row.Currency},
+				{AccountID: creditID, Amount: row.Amount.Neg(), Currency: row.Currency},
 			},
 		})
 		if err != nil {

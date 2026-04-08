@@ -23,6 +23,9 @@ type AccountRepository interface {
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]domain.Account, error)
 	Update(ctx context.Context, account domain.Account) (domain.Account, error)
 	GetBalance(ctx context.Context, accountID, userID uuid.UUID) (decimal.Decimal, error)
+	// GetOrCreateUncategorized returns (creating if needed) the system "Sin categorizar"
+	// expense account used as the default counterpart during CSV imports.
+	GetOrCreateUncategorized(ctx context.Context, userID uuid.UUID, currency string) (domain.Account, error)
 }
 
 // LedgerRepository defines persistence for journal entries (double-entry ledger).
