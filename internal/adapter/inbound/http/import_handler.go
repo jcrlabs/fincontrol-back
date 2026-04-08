@@ -93,7 +93,7 @@ type confirmRowJSON struct {
 type confirmRequest struct {
 	Rows            []confirmRowJSON      `json:"rows"`
 	DebitAccountID  string                `json:"debit_account_id"`
-	CreditAccountID string                `json:"credit_account_id"`
+	CreditAccountID string                `json:"credit_account_id,omitempty"` // optional: defaults to "Sin categorizar"
 	CategoryID      *string               `json:"category_id,omitempty"`
 	CSVData         string                `json:"csv_data,omitempty"`
 	Mapping         *domain.ColumnMapping `json:"mapping,omitempty"`
@@ -118,10 +118,14 @@ func (h *ImportHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid debit_account_id"})
 		return
 	}
-	creditID, err := uuid.Parse(req.CreditAccountID)
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid credit_account_id"})
-		return
+	var creditIDPtr *uuid.UUID
+	if req.CreditAccountID != "" {
+		id, parseErr := uuid.Parse(req.CreditAccountID)
+		if parseErr != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid credit_account_id"})
+			return
+		}
+		creditIDPtr = &id
 	}
 
 	var rows []domain.ImportRow
@@ -143,7 +147,7 @@ func (h *ImportHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 
 	input := app.ConfirmInput{
 		UserID: userID, Rows: rows,
-		DebitAccountID: debitID, CreditAccountID: creditID,
+		DebitAccountID: debitID, CreditAccountID: creditIDPtr,
 	}
 	if req.CategoryID != nil {
 		if catID, err := uuid.Parse(*req.CategoryID); err == nil {

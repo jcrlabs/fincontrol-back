@@ -94,6 +94,52 @@ func (r *AccountRepo) Update(ctx context.Context, account domain.Account) (domai
 	return account, nil
 }
 
+// GetOrCreateUncategorized returns the "Sin categorizar" expense account for the user,
+// creating it atomically if it does not exist yet.
+func (r *AccountRepo) GetOrCreateUncategorized(ctx context.Context, userID uuid.UUID, currency string) (domain.Account, error) {
+	if currency == "" {
+		currency = "EUR"
+	}
+	const name = "Sin categorizar"
+	var a domain.Account
+	// Try to find existing one first.
+	err := r.pool.QueryRow(ctx, `
+		SELECT id, user_id, name, type, currency, is_active, created_at
+		FROM accounts WHERE user_id = $1 AND name = $2 AND type = 'expense' LIMIT 1
+	`, userID, name).Scan(&a.ID, &a.UserID, &a.Name, &a.Type, &a.Currency, &a.IsActive, &a.CreatedAt)
+	if err == nil {
+		return a, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return domain.Account{}, fmt.Errorf("lookup uncategorized account: %w", err)
+	}
+	// Create it.
+	newID := uuid.New()
+	err = r.pool.QueryRow(ctx, `
+		INSERT INTO accounts (id, user_id, name, type, currency, is_active)
+		VALUES ($1, $2, $3, 'expense', $4, true)
+		ON CONFLICT DO NOTHING
+		RETURNING id, user_id, name, type, currency, is_active, created_at
+	`, newID, userID, name, currency).Scan(
+		&a.ID, &a.UserID, &a.Name, &a.Type, &a.Currency, &a.IsActive, &a.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// Lost the race — another request created it; fetch it.
+			err = r.pool.QueryRow(ctx, `
+				SELECT id, user_id, name, type, currency, is_active, created_at
+				FROM accounts WHERE user_id = $1 AND name = $2 AND type = 'expense' LIMIT 1
+			`, userID, name).Scan(&a.ID, &a.UserID, &a.Name, &a.Type, &a.Currency, &a.IsActive, &a.CreatedAt)
+			if err != nil {
+				return domain.Account{}, fmt.Errorf("re-fetch uncategorized account: %w", err)
+			}
+			return a, nil
+		}
+		return domain.Account{}, fmt.Errorf("create uncategorized account: %w", err)
+	}
+	return a, nil
+}
+
 func (r *AccountRepo) GetBalance(ctx context.Context, accountID, userID uuid.UUID) (decimal.Decimal, error) {
 	// Verify account ownership first
 	var exists bool

@@ -67,7 +67,7 @@ func main() {
 	categorySvc := app.NewCategoryService(categoryRepo)
 	budgetSvc := app.NewBudgetService(budgetRepo)
 	scheduledSvc := app.NewScheduledService(scheduleRepo, ledgerRepo, auditRepo)
-	importSvc := app.NewImportService(importRepo, ledgerRepo, auditRepo)
+	importSvc := app.NewImportService(importRepo, ledgerRepo, auditRepo, accountRepo)
 
 	// Parsers
 	csvParser := parser.NewCSVParser()
