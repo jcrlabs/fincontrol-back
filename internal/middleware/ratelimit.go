@@ -1,49 +1,68 @@
 package middleware
 
 import (
+	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
 
-type windowEntry struct {
-	count     int
-	windowEnd time.Time
+type slidingWindow struct {
+	mu        sync.Mutex
+	attempts  []time.Time
+	maxHits   int
+	windowDur time.Duration
 }
 
-// RateLimiter implements a fixed-window rate limiter keyed by IP.
+func (sw *slidingWindow) allow() bool {
+	now := time.Now()
+	sw.mu.Lock()
+	defer sw.mu.Unlock()
+
+	cutoff := now.Add(-sw.windowDur)
+	valid := sw.attempts[:0]
+	for _, t := range sw.attempts {
+		if t.After(cutoff) {
+			valid = append(valid, t)
+		}
+	}
+	sw.attempts = valid
+
+	if len(sw.attempts) >= sw.maxHits {
+		return false
+	}
+	sw.attempts = append(sw.attempts, now)
+	return true
+}
+
+// RateLimiter implements a sliding-window rate limiter keyed by IP.
 type RateLimiter struct {
-	mu       sync.Mutex
-	windows  map[string]*windowEntry
-	limit    int
-	duration time.Duration
+	mu      sync.Mutex
+	entries map[string]*slidingWindow
+	maxHits int
+	window  time.Duration
 }
 
 func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
 	rl := &RateLimiter{
-		windows:  make(map[string]*windowEntry),
-		limit:    limit,
-		duration: window,
+		entries: make(map[string]*slidingWindow),
+		maxHits: limit,
+		window:  window,
 	}
 	go rl.cleanup()
 	return rl
 }
 
-func (rl *RateLimiter) Allow(key string) bool {
+func (rl *RateLimiter) get(key string) *slidingWindow {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-
-	now := time.Now()
-	entry, ok := rl.windows[key]
-	if !ok || now.After(entry.windowEnd) {
-		rl.windows[key] = &windowEntry{count: 1, windowEnd: now.Add(rl.duration)}
-		return true
+	sw, ok := rl.entries[key]
+	if !ok {
+		sw = &slidingWindow{maxHits: rl.maxHits, windowDur: rl.window}
+		rl.entries[key] = sw
 	}
-	if entry.count >= rl.limit {
-		return false
-	}
-	entry.count++
-	return true
+	return sw
 }
 
 func (rl *RateLimiter) cleanup() {
@@ -51,11 +70,12 @@ func (rl *RateLimiter) cleanup() {
 	defer ticker.Stop()
 	for range ticker.C {
 		rl.mu.Lock()
-		now := time.Now()
-		for k, v := range rl.windows {
-			if now.After(v.windowEnd) {
-				delete(rl.windows, k)
+		for k, sw := range rl.entries {
+			sw.mu.Lock()
+			if len(sw.attempts) == 0 {
+				delete(rl.entries, k)
 			}
+			sw.mu.Unlock()
 		}
 		rl.mu.Unlock()
 	}
@@ -65,15 +85,22 @@ func (rl *RateLimiter) cleanup() {
 func Limit(rl *RateLimiter) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ip := r.RemoteAddr
-			if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-				ip = xff
-			}
-			if !rl.Allow(ip) {
+			ip := clientIP(r)
+			if !rl.get(ip).allow() {
 				http.Error(w, `{"error":"too many requests"}`, http.StatusTooManyRequests)
 				return
 			}
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func clientIP(r *http.Request) string {
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		return strings.TrimSpace(strings.SplitN(fwd, ",", 2)[0])
+	}
+	if host, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		return host
+	}
+	return r.RemoteAddr
 }

@@ -27,6 +27,7 @@ func NewServer(
 
 	loginLimiter := middleware.NewRateLimiter(5, 15*time.Minute)
 	registerLimiter := middleware.NewRateLimiter(3, time.Hour)
+	refreshLimiter := middleware.NewRateLimiter(10, 15*time.Minute)
 
 	// Public
 	mux.HandleFunc("GET /api/health", HealthHandler)
@@ -37,7 +38,9 @@ func NewServer(
 	mux.Handle("POST /api/v1/auth/login",
 		middleware.Limit(loginLimiter)(http.HandlerFunc(authHandler.Login)),
 	)
-	mux.HandleFunc("POST /api/v1/auth/refresh", authHandler.Refresh)
+	mux.Handle("POST /api/v1/auth/refresh",
+		middleware.Limit(refreshLimiter)(http.HandlerFunc(authHandler.Refresh)),
+	)
 	mux.HandleFunc("POST /api/v1/auth/logout", authHandler.Logout)
 
 	// Protected
